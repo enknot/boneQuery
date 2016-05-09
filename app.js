@@ -6,7 +6,7 @@
  */
 +function($){
     
-windodw.app = {
+window.app = {
     
 
     /**
