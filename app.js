@@ -179,6 +179,10 @@
             var funcName = 'app.custom';
             var params = {};
 
+            if(!app.custom.hash){
+                return false;
+            }
+            
             if (window.location.hash.match(app.custom.hash.bypass)) {
                 console.log(window.location.hash.match());
                 return;
