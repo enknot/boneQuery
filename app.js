@@ -242,8 +242,6 @@
         refill: function (params) {
 
 
-            console.log(params);
-
             if (("target" in params) && ("html" in params)) {
                 $(params.target).html(params.html);
             } else
