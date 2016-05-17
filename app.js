@@ -226,6 +226,59 @@
                 }
             }
         },
+        
+                hospitality : function(){
+
+            //Grab the curent date
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth() + 1; //January is 0!
+            var yyyy = today.getFullYear();
+
+            if (dd < 10) {
+                dd = '0' + dd;
+            }
+
+            if (mm < 10) {
+                mm = '0' + mm;
+            }
+            today = yyyy + mm + dd;
+
+            //HTML5 Storage?
+            if (typeof (Storage) !== "undefined") {
+                //New Session?
+                if (sessionStorage.hitcount) {
+                    sessionStorage.hitcount = Number(sessionStorage.hitcount) + 1;
+                } else {
+                    sessionStorage.hitcount = 1;
+                }
+
+                //First Visit Today?
+                if (localStorage.daycount) {
+                    //Enable Class for Day Count
+                    if (localStorage.daycount !== today) {
+                        $('body').addClass('first-visit');
+                        console.log('First Visit Today');
+                        localStorage.daycount = today;
+                    } else {
+                        console.log('Previous Visits Today.');
+                    }
+                } else {
+                    $('body').addClass('first-visit');
+                    localStorage.daycount = today;
+                    console.log("Set Day Count");
+                }
+            } else {
+                console.log("Session Storage Not Supported.");
+            }
+
+            //Enable Class for Hit count
+            if (sessionStorage.hitcount <= 1) {
+                $('body').addClass('new-session');
+            }
+
+        },
+        
         runCallbacks: function (bundle) {
 
             $.each(bundle, function (cbname, paramList) {
