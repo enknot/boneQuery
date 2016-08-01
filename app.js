@@ -26,96 +26,41 @@
                 if (app.buttonBin.buttons) {
                     app.buttonBin.buttons.unbind('click');
                 }
-                app.buttonBin.buttons = $('.button_bin button');
+                app.buttonBin.buttons = $('.button_bin button, .button_bin .button');
                 app.buttonBin.buttons.click(app.buttonBin.click);
             },
             buttons: null,
             click: function (e) {
 
+                
                 var button = $(this);
+                var bin = button.closest('.button_bin');
                 var t_data = bin.data();
-
+                var action = button.val();
+                
+                action = (action)?action:t_data['action'];
+                                
                 var ref = {
-                    action: button.val(),
-                    bin: button.closest('.button_bin'),
+                    action: action,
+                    bin: bin,
                     button: $(this),
-                    data: $.param(t_data),
+                    data: $.extend(t_data, button.data()),
+                    params: null,
                     event: e,
                     form: $(this.form),
                     message_parent: 'general_messages',
                     runAjax: false,
                     type: button.parent().attr('data-type'), //depreciated - data member takes care of this
                     id: button.parent().attr('data-id'), //depreciated - data member takes care of this
-                    typeID: button.parent().attr('data-id'), //depreciated - data member takes care of this
                     url: null
                 };
 
-                e.preventDefault();
-
-                console.log(ref);
-
-                switch (action) {
-                    case 'add_line':
-                        var count = $('#line_bin_' + ref.typeID + ' .line_cluster').length;
-                        ref.data = "id=" + ref.typeID + '&index=' + count;
-                        ref.runAjax = true;
-                        break;
-                    case 'remove_line':
-                        var count = $('#line_bin_' + ref.typeID + ' .line_cluster').length;
-                        if (count > 1) {
-                            ref.data = "id=" + ref.typeID + '&index=' + count;
-                            ref.runAjax = true;
-                            $('#line_bin_' + ref.typeID + ' div.line_cluster:last-child').remove();
-                        }
-                        break;
-                    case 'cancel_add_new':
-                        bio.select.replace(ref);
-                        break;
+                if(ref.data.skip_prevent){
+                    e.preventDefault();                    
                 }
-
-                if (ref.runAjax) {
-                    ref.url = url ? url : '/form/' + ref.type + '_' + ref.action;
-                    app.ajax.run(url, ref.data, ref.message_parent);
-                }
-            },
-        },
-        controlBin: {
-            bind: function (eventType) {
-
-                eventType = (eventType) ? eventType : 'click';
-
-                if (app.controlBin.controls)
-                    app.controlBin.controls.unbind('click');
-
-                app.controlBin.controls = $('.control_bin input');
-                app.controlBin.controls.click(app.controlBin.fire);
-            },
-            controls: null,
-            fire: function (e) {
-
-                console.log('fired!');
-
-                var button = $(this);
-                var bin = button.closest('.control_bin');
-                var t_data = bin.data();
-
-                delete t_data['type'];
-
-                var ref = {
-                    action: button.val(),
-                    bin: bin,
-                    button: button,
-                    data: $.param(t_data),
-                    event: e,
-                    form: $(this.form),
-                    id: bin.attr('data-id'),
-                    message_parent: 'general_messages',
-                    runAjax: false,
-                    type: bin.attr('data-type')
-                };
-
-                e.preventDefault();
-
+                
+                 console.log(ref);
+                 
                 if (app.custom.buttonSwitch) {
                     app.custom.buttonSwitch(ref);
                 } else {
@@ -126,9 +71,11 @@
                     }
                 }
 
+                console.log(ref);
+
                 if (ref.runAjax) {
-                    url = ref.url ? ref.url : '/form/' + ref.type + '_' + ref.action;
-                    app.ajax.run(url, ref.data, ref.message_parent);
+                    ref.url = (ref.url) ? ref.url : '/form/' + ref.type + '_' + ref.action;
+                    app.ajax.run(ref.url, ref.params, ref.message_parent);
                 }
             },
         },
@@ -173,11 +120,12 @@
                 }
             },
         },
-        hashtag: function (e) {
+        hashtag: function (report) {
 
             var hashes = window.location.hash.split('#');
             var funcName = 'app.custom';
             var params = {};
+            var ret = {};
 
             if (window.location.hash.match(app.custom.hash.bypass)) {
                 console.log(window.location.hash.match());
@@ -203,6 +151,9 @@
                                 params[pairs[0]] = pairs[1];
                             }
                         }
+                        
+                        ret.params = params;
+                        
                         break;
 
                     } else {
@@ -210,24 +161,32 @@
                         var cleanTag = $.trim(base[i]);
                         if (cleanTag != '') {
                             funcName += '.' + base[i];
+                            ret.funcName = funcName;
                         }
                     }
                 }
+                
             });
 
 
-
+            
             var func = eval(funcName);
             if (typeof func == 'function') {
-                func(params);
+                if(report != 1) {
+                    func(params);
+                }
             } else {
+                
+                ret.funcName = null;
+                
                 if ((window.location.hash.trim() != '') && app.custom.hash.default) {
                     window.location.hash = app.custom.hashDefault;
                 }
             }
+            
+            return ret;
         },
-        
-                hospitality : function(){
+        hospitality: function () {
 
             //Grab the curent date
             var today = new Date();
@@ -278,7 +237,6 @@
             }
 
         },
-        
         runCallbacks: function (bundle) {
 
             $.each(bundle, function (cbname, paramList) {
